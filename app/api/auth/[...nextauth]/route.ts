@@ -1,18 +1,16 @@
-import NextAuth from "next-auth"
-import GithubProvider from "next-auth/providers/github"
+import NextAuth, { AuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import { prisma } from "@/lib/db"
 import { compare } from "bcryptjs"
 
-export const authOptions = {
+const authOptions: AuthOptions = {
   adapter: PrismaAdapter(prisma),
   session: {
     strategy: "jwt",
   },
   pages: {
     signIn: "/auth/signin",
-    signUp: "/auth/signup",
   },
   providers: [
     CredentialsProvider({
@@ -55,10 +53,6 @@ export const authOptions = {
         }
       }
     }),
-    GithubProvider({
-      clientId: process.env.GITHUB_ID,
-      clientSecret: process.env.GITHUB_SECRET,
-    }),
   ],
   callbacks: {
     async jwt({ token, user }) {
@@ -69,37 +63,18 @@ export const authOptions = {
       return token
     },
     async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id
-        session.user.role = token.role
+      if (token && session.user) {
+        session.user.id = token.id as string
+        session.user.role = token.role as string
       }
       return session
     },
-    async signIn({ account, profile }) {
-      if (account?.provider === "github") {
-        try {
-          // Check if user exists, if not create them
-          const existingUser = await prisma.user.findUnique({
-            where: { email: profile?.email }
-          })
-
-          if (!existingUser) {
-            await prisma.user.create({
-              data: {
-                email: profile?.email,
-                name: profile?.name,
-                role: "STAFF", // Default role for new users
-              }
-            })
-          }
-        } catch (error) {
-          console.error("Error creating user:", error)
-          return false
-        }
-      }
+    async signIn() {
       return true
     },
   },
 }
 
-export default NextAuth(authOptions)
+const handler = NextAuth(authOptions)
+
+export { handler as GET, handler as POST }
