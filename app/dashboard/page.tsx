@@ -4,9 +4,24 @@ import { useSession } from "next-auth/react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { AddCustomerModal } from "@/components/customers/form-modal"
+import { addCustomer } from "@/lib/customers"
+import { toast } from "sonner"
+import { CustomerFormData } from "@/types"
 
 export default function Dashboard() {
     const { data: session } = useSession()
+
+    const handleAddCustomer = async (data: CustomerFormData) => {
+        try {
+            await addCustomer(data)
+            toast.success("Customer added successfully!")
+        } catch (error) {
+            console.error("Error adding customer:", error)
+            toast.error("Failed to add customer")
+            throw error // Re-throw to keep modal loading state
+        }
+    }
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -80,11 +95,7 @@ export default function Dashboard() {
                                 <CardTitle>Quick Actions</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                <Button asChild className="w-full justify-start">
-                                    <Link href="/customers/new">
-                                        Add New Customer
-                                    </Link>
-                                </Button>
+                                <AddCustomerModal mode="add_quick_action" onSubmit={handleAddCustomer} />
                                 <Button asChild className="w-full justify-start" variant="outline">
                                     <Link href="/products/new">
                                         Add New Product

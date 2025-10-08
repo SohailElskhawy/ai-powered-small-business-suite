@@ -24,7 +24,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
-import { Plus, Edit, Loader2 } from "lucide-react"
+import { Plus, Edit, Loader2, Trash2 } from "lucide-react"
 
 // Form validation schema
 const customerFormSchema = z.object({
@@ -33,27 +33,23 @@ const customerFormSchema = z.object({
     }),
     email: z.email({
         message: "Please enter a valid email address.",
-    }),
-    phone: z.string().min(10, {
-        message: "Phone number must be at least 10 characters.",
-    }),
-    address: z.string().min(5, {
-        message: "Address must be at least 5 characters.",
-    }),
+    }).optional().or(z.literal("")),
+    phone: z.string().optional(),
+    address: z.string().optional(),
     notes: z.string().optional(),
 })
 
 type CustomerFormValues = z.infer<typeof customerFormSchema>
 
 interface CustomerFormModalProps {
-    mode: "add" | "edit"
+    mode: "add" | "edit" | "add_quick_action"
     customer?: {
         id: string
         name: string
-        email: string
-        phone: string
-        address: string
-        notes?: string
+        email?: string | null
+        phone?: string | null
+        address?: string | null
+        notes?: string | null
     }
     trigger?: React.ReactNode
     onSubmit: (data: CustomerFormValues) => Promise<void>
@@ -97,12 +93,16 @@ export function CustomerFormModal({
             <Plus className="w-4 h-4 mr-2" />
             Add Customer
         </Button>
-    ) : (
-        <Button variant="outline" size="sm">
-            <Edit className="w-4 h-4 mr-2" />
-            Edit
+    ) : mode === "add_quick_action" ?
+        <Button className="w-full justify-start cursor-pointer">
+            Add New Customer
         </Button>
-    )
+        : (
+            <Button variant="outline" size="sm">
+                <Edit className="w-4 h-4 mr-2" />
+                Edit
+            </Button>
+        )
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -112,10 +112,10 @@ export function CustomerFormModal({
             <DialogContent className="sm:max-w-[525px]">
                 <DialogHeader>
                     <DialogTitle>
-                        {mode === "add" ? "Add New Customer" : "Edit Customer"}
+                        {(mode === "add" || mode === "add_quick_action") ? "Add New Customer" : "Edit Customer"}
                     </DialogTitle>
                     <DialogDescription>
-                        {mode === "add"
+                        {mode === "add" || mode === "add_quick_action"
                             ? "Enter the customer's information below to add them to your database."
                             : "Update the customer's information below."
                         }
@@ -148,7 +148,7 @@ export function CustomerFormModal({
                                     name="email"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Email Address *</FormLabel>
+                                            <FormLabel>Email Address</FormLabel>
                                             <FormControl>
                                                 <Input
                                                     type="email"
@@ -166,7 +166,7 @@ export function CustomerFormModal({
                                     name="phone"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Phone Number *</FormLabel>
+                                            <FormLabel>Phone Number</FormLabel>
                                             <FormControl>
                                                 <Input
                                                     type="tel"
@@ -185,7 +185,7 @@ export function CustomerFormModal({
                                 name="address"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Address *</FormLabel>
+                                        <FormLabel>Address</FormLabel>
                                         <FormControl>
                                             <Input
                                                 placeholder="Street address, City, State, ZIP code"
@@ -237,7 +237,7 @@ export function CustomerFormModal({
                                 {isLoading && (
                                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                                 )}
-                                {mode === "add" ? "Add Customer" : "Update Customer"}
+                                {mode === "add" || mode === "add_quick_action" ? "Add Customer" : "Update Customer"}
                             </Button>
                         </div>
                     </form>
@@ -248,10 +248,10 @@ export function CustomerFormModal({
 }
 
 // Export a convenience component for adding customers
-export function AddCustomerModal({ onSubmit }: { onSubmit: (data: CustomerFormValues) => Promise<void> }) {
+export function AddCustomerModal({ onSubmit, mode="add" }: { onSubmit: (data: CustomerFormValues) => Promise<void>, mode?: "add" | "add_quick_action" }) {
     return (
         <CustomerFormModal
-            mode="add"
+            mode={mode}
             onSubmit={onSubmit}
         />
     )
@@ -271,5 +271,70 @@ export function EditCustomerModal({
             customer={customer}
             onSubmit={onSubmit}
         />
+    )
+}
+
+// Export a convenience component for deleting customers
+export function DeleteCustomerModal({
+    customer,
+    onDelete
+}: {
+    customer: { id: string; name: string }
+    onDelete: (customerId: string) => Promise<void>
+}) {
+    const [open, setOpen] = useState(false)
+    const [isLoading, setIsLoading] = useState(false)
+
+    const handleDelete = async () => {
+        setIsLoading(true)
+        try {
+            await onDelete(customer.id)
+            setOpen(false)
+        } catch (error) {
+            console.error("Error deleting customer:", error)
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>Delete Customer</DialogTitle>
+                    <DialogDescription>
+                        Are you sure you want to delete <strong>{customer.name}</strong>? This action cannot be undone.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div className="flex justify-end space-x-3 mt-6">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setOpen(false)}
+                        disabled={isLoading}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        type="button"
+                        variant="destructive"
+                        onClick={handleDelete}
+                        disabled={isLoading}
+                    >
+                        {isLoading && (
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        )}
+                        Delete Customer
+                    </Button>
+                </div>
+            </DialogContent>
+        </Dialog>
     )
 }

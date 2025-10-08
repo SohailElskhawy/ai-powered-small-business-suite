@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useState } from 'react'
-import { Search} from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Search } from 'lucide-react'
 import { Input } from "@/components/ui/input"
 import {
     Table,
@@ -11,72 +11,93 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { AddCustomerModal, EditCustomerModal } from "@/components/customers/form-modal"
-import { Customer } from '@/types'
-import { sampleCustomers } from '@/constants/dummyData'
-
-
+import { AddCustomerModal, EditCustomerModal, DeleteCustomerModal } from "@/components/customers/form-modal"
+import { Customer, CustomerFormData } from '@/types'
+import { toast } from "sonner"
+import { getCustomers, addCustomer, updateCustomer, deleteCustomer } from '@/lib/customers'
 
 export default function CustomersPage() {
-    const [activeTab, setActiveTab] = useState<'my' | 'all'>('my')
     const [searchQuery, setSearchQuery] = useState('')
-    const [customers, setCustomers] = useState<Customer[]>(sampleCustomers)
+    const [customers, setCustomers] = useState<Customer[]>([])
+    const [loading, setLoading] = useState(true)
+
+    // Load customers on component mount
+    useEffect(() => {
+        loadCustomers()
+    }, [])
+
+    const loadCustomers = async () => {
+        try {
+            setLoading(true)
+            const customerData = await getCustomers()
+            setCustomers(customerData)
+        } catch (error) {
+            console.error("Error loading customers:", error)
+            toast.error("Failed to load customers")
+        } finally {
+            setLoading(false)
+        }
+    }
 
     // Handle adding a new customer
-    const handleAddCustomer = async (data: Omit<Customer, 'id' | 'lastActivity' | 'clientSince'>) => {
-        const newCustomer: Customer = {
-            id: Date.now().toString(),
-            ...data,
-            lastActivity: new Date().toISOString().split('T')[0],
-            clientSince: new Date().toISOString().split('T')[0],
+    const handleAddCustomer = async (data: CustomerFormData) => {
+        try {
+            const newCustomer = await addCustomer(data)
+            setCustomers(prev => [newCustomer, ...prev])
+            toast.success("Customer added successfully!")
+        } catch (error) {
+            console.error("Error adding customer:", error)
+            toast.error("Failed to add customer")
+            throw error // Re-throw to keep modal loading state
         }
-        setCustomers(prev => [...prev, newCustomer])
-        console.log("Adding customer:", newCustomer)
-        // add logic to save to backend/database here
     }
 
     // Handle editing a customer
-    const handleEditCustomer = async (customerId: string, data: Omit<Customer, 'id' | 'lastActivity' | 'clientSince'>) => {
-        setCustomers(prev => prev.map(customer => 
-            customer.id === customerId 
-                ? { ...customer, ...data }
-                : customer
-        ))
-        console.log("Editing customer:", data)
-        // add logic to update backend/database here
+    const handleEditCustomer = async (customerId: string, data: CustomerFormData) => {
+        try {
+            const updatedCustomer = await updateCustomer(customerId, data)
+            setCustomers(prev => prev.map(customer => 
+                customer.id === customerId ? updatedCustomer : customer
+            ))
+            toast.success("Customer updated successfully!")
+        } catch (error) {
+            console.error("Error updating customer:", error)
+            toast.error("Failed to update customer")
+            throw error // Re-throw to keep modal loading state
+        }
+    }
+
+    // Handle deleting a customer
+    const handleDeleteCustomer = async (customerId: string) => {
+        try {
+            await deleteCustomer(customerId)
+            setCustomers(prev => prev.filter(customer => customer.id !== customerId))
+            toast.success("Customer deleted successfully!")
+        } catch (error) {
+            console.error("Error deleting customer:", error)
+            toast.error("Failed to delete customer")
+            throw error // Re-throw to keep modal loading state
+        }
     }
 
     // Filter customers based on search query
     const filteredCustomers = customers.filter(customer =>
         customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        customer.phone.includes(searchQuery)
+        (customer.email && customer.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (customer.phone && customer.phone.includes(searchQuery)) ||
+        (customer.address && customer.address.toLowerCase().includes(searchQuery.toLowerCase())) 
     )
+
+    // Format date for display
+    const formatDate = (date: Date) => {
+        return new Date(date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+    }
 
     return (
         <div className="min-h-screen bg-gray-50">
             <div className="flex flex-row justify-between items-center p-6 bg-white border-b">
                 <div className="flex space-x-1">
-                    <button
-                        onClick={() => setActiveTab('my')}
-                        className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                            activeTab === 'my'
-                                ? 'text-blue-600 bg-blue-50 border-b-2 border-blue-600'
-                                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                        }`}
-                    >
-                        My Customers
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('all')}
-                        className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                            activeTab === 'all'
-                                ? 'text-blue-600 bg-blue-50 border-b-2 border-blue-600'
-                                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                        }`}
-                    >
-                        All Customers
-                    </button>
+                    <h1 className="text-2xl font-semibold text-gray-900">Customers</h1>
                 </div>
                 <div className="flex items-center space-x-3">
                     <div className="relative">
@@ -94,48 +115,58 @@ export default function CustomersPage() {
             </div>
             
             <div className="p-6">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Phone & Email</TableHead>
-                            <TableHead>Address</TableHead>
-                            <TableHead>Last Activity</TableHead>
-                            <TableHead>Client Since</TableHead>
-                            <TableHead>Action</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {filteredCustomers.length > 0 ? (
-                            filteredCustomers.map((customer) => (
-                                <TableRow key={customer.id}>
-                                    <TableCell className="font-medium">{customer.name}</TableCell>
-                                    <TableCell>
-                                        {customer.phone}<br />
-                                        <span className="text-gray-600">{customer.email}</span>
-                                    </TableCell>
-                                    <TableCell>{customer.address}</TableCell>
-                                    <TableCell>{customer.lastActivity}</TableCell>
-                                    <TableCell>{customer.clientSince}</TableCell>
-                                    <TableCell>
-                                        <div className="flex space-x-2">
-                                            <EditCustomerModal 
-                                                customer={customer}
-                                                onSubmit={(data) => handleEditCustomer(customer.id, data)}
-                                            />
-                                        </div>
+                {loading ? (
+                    <div className="flex justify-center py-8">
+                        <div className="text-gray-500">Loading customers...</div>
+                    </div>
+                ) : (
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Phone & Email</TableHead>
+                                <TableHead>Address</TableHead>
+                                <TableHead>Created</TableHead>
+                                <TableHead>Updated</TableHead>
+                                <TableHead>Action</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {filteredCustomers.length > 0 ? (
+                                filteredCustomers.map((customer) => (
+                                    <TableRow key={customer.id}>
+                                        <TableCell className="font-medium">{customer.name}</TableCell>
+                                        <TableCell>
+                                            {customer.phone && <div>{customer.phone}</div>}
+                                            {customer.email && <div className="text-gray-600">{customer.email}</div>}
+                                        </TableCell>
+                                        <TableCell>{customer.address || '-'}</TableCell>
+                                        <TableCell>{formatDate(customer.createdAt)}</TableCell>
+                                        <TableCell>{formatDate(customer.updatedAt)}</TableCell>
+                                        <TableCell>
+                                            <div className="flex space-x-2">
+                                                <EditCustomerModal 
+                                                    customer={customer}
+                                                    onSubmit={(data) => handleEditCustomer(customer.id, data)}
+                                                />
+                                                <DeleteCustomerModal
+                                                    customer={{ id: customer.id, name: customer.name }}
+                                                    onDelete={handleDeleteCustomer}
+                                                />
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                                        {searchQuery ? 'No customers found matching your search.' : 'No customers found.'}
                                     </TableCell>
                                 </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                                    {searchQuery ? 'No customers found matching your search.' : 'No customers found.'}
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
+                            )}
+                        </TableBody>
+                    </Table>
+                )}
             </div>
         </div>
     )
