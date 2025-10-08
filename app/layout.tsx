@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { ConditionalSidebarWrapper } from "@/components/conditional-sidebar-wrapper";
+import { Header } from "@/components/header";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,7 +32,12 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-        {children}
+          <div className="min-h-screen flex flex-col">
+            <Header />
+            <ConditionalSidebarWrapper>
+              {children}
+            </ConditionalSidebarWrapper>
+          </div>
         </AuthProvider>
         <Toaster />
       </body>

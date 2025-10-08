@@ -1,0 +1,1 @@
+export const ROUTES = ["/dashboard", "/customers", "/products", "/invoices"]
