@@ -1,8 +1,7 @@
 "use client"
 
 import React, { useState } from 'react'
-import { Search, Plus } from 'lucide-react'
-import { Button } from "@/components/ui/button"
+import { Search} from 'lucide-react'
 import { Input } from "@/components/ui/input"
 import {
     Table,
@@ -12,10 +11,47 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { AddCustomerModal, EditCustomerModal } from "@/components/customers/form-modal"
+import { Customer } from '@/types'
+import { sampleCustomers } from '@/constants/dummyData'
+
+
 
 export default function CustomersPage() {
     const [activeTab, setActiveTab] = useState<'my' | 'all'>('my')
     const [searchQuery, setSearchQuery] = useState('')
+    const [customers, setCustomers] = useState<Customer[]>(sampleCustomers)
+
+    // Handle adding a new customer
+    const handleAddCustomer = async (data: Omit<Customer, 'id' | 'lastActivity' | 'clientSince'>) => {
+        const newCustomer: Customer = {
+            id: Date.now().toString(),
+            ...data,
+            lastActivity: new Date().toISOString().split('T')[0],
+            clientSince: new Date().toISOString().split('T')[0],
+        }
+        setCustomers(prev => [...prev, newCustomer])
+        console.log("Adding customer:", newCustomer)
+        // add logic to save to backend/database here
+    }
+
+    // Handle editing a customer
+    const handleEditCustomer = async (customerId: string, data: Omit<Customer, 'id' | 'lastActivity' | 'clientSince'>) => {
+        setCustomers(prev => prev.map(customer => 
+            customer.id === customerId 
+                ? { ...customer, ...data }
+                : customer
+        ))
+        console.log("Editing customer:", data)
+        // add logic to update backend/database here
+    }
+
+    // Filter customers based on search query
+    const filteredCustomers = customers.filter(customer =>
+        customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        customer.phone.includes(searchQuery)
+    )
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -53,46 +89,54 @@ export default function CustomersPage() {
                             className="pl-10 w-64"
                         />
                     </div>
-                    <Button className="bg-blue-600 hover:bg-blue-700">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Customer
-                    </Button>
+                    <AddCustomerModal onSubmit={handleAddCustomer} />
                 </div>
             </div>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Phone & Email</TableHead>
-                        <TableHead>Address</TableHead>
-                        <TableHead>Last Activity</TableHead>
-                        <TableHead>Client Since</TableHead>
-                        <TableHead>Action</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    <TableRow>
-                        <TableCell className="font-medium">John Doe</TableCell>
-                        <TableCell>(123) 456-7890<br />johndoe@example.com</TableCell>
-                        <TableCell>123 Main St, City, State</TableCell>
-                        <TableCell>2023-10-01</TableCell>
-                        <TableCell>2022-05-15</TableCell>
-                        <TableCell>
-                            <button className="text-blue-600 hover:underline">View</button>
-                        </TableCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableCell className="font-medium">Jane Smith</TableCell>
-                        <TableCell>(987) 654-3210<br />janesmith@example.com</TableCell>
-                        <TableCell>456 Elm St, City, State</TableCell>
-                        <TableCell>2023-09-20</TableCell>
-                        <TableCell>2021-11-30</TableCell>
-                        <TableCell>
-                            <button className="text-blue-600 hover:underline">View</button>
-                        </TableCell>
-                    </TableRow>
-                </TableBody>
-            </Table>
+            
+            <div className="p-6">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Phone & Email</TableHead>
+                            <TableHead>Address</TableHead>
+                            <TableHead>Last Activity</TableHead>
+                            <TableHead>Client Since</TableHead>
+                            <TableHead>Action</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {filteredCustomers.length > 0 ? (
+                            filteredCustomers.map((customer) => (
+                                <TableRow key={customer.id}>
+                                    <TableCell className="font-medium">{customer.name}</TableCell>
+                                    <TableCell>
+                                        {customer.phone}<br />
+                                        <span className="text-gray-600">{customer.email}</span>
+                                    </TableCell>
+                                    <TableCell>{customer.address}</TableCell>
+                                    <TableCell>{customer.lastActivity}</TableCell>
+                                    <TableCell>{customer.clientSince}</TableCell>
+                                    <TableCell>
+                                        <div className="flex space-x-2">
+                                            <EditCustomerModal 
+                                                customer={customer}
+                                                onSubmit={(data) => handleEditCustomer(customer.id, data)}
+                                            />
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                                    {searchQuery ? 'No customers found matching your search.' : 'No customers found.'}
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
         </div>
     )
 }
