@@ -54,3 +54,29 @@ export interface ProductFormData {
     unitPrice: number
     stockQuantity: number
 }
+
+export interface Product {
+    id: string
+    userId: string
+    name: string
+    sku: string | null
+    description: string | null
+    unitPrice: number
+    stockQuantity: number
+    createdAt: Date
+    updatedAt: Date
+}
+
+export interface InvoiceFormData {
+    customerId: string
+    items: InvoiceItemFormData[]
+    dueDate: string // ISO date string
+}
+
+export interface InvoiceItemFormData {
+    productId?: string | null
+    description: string
+    quantity: number
+    unitPrice: number
+    lineTotal: number
+}
