@@ -18,3 +18,39 @@ export interface CustomerFormData {
     address?: string
     notes?: string
 }
+
+
+
+export interface Invoice {
+    id: string
+    userId: string
+    customerId: string
+    invoiceNumber: string
+    status: 'DRAFT' | 'SENT' | 'PAID' | 'OVERDUE'
+    dueDate: Date
+    totalAmount: number
+    items: InvoiceItem[]
+    createdAt: Date
+    updatedAt: Date
+}
+
+export interface InvoiceItem {
+    id: string
+    invoiceId: string
+    productId: string
+    description: string
+    quantity: number
+    unitPrice: number
+    lineTotal: number
+    createdAt: Date
+    updatedAt: Date
+}
+
+
+export interface ProductFormData {
+    name: string
+    sku: string
+    description?: string
+    unitPrice: number
+    stockQuantity: number
+}

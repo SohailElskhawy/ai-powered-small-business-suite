@@ -15,6 +15,7 @@ import { AddCustomerModal, EditCustomerModal, DeleteCustomerModal } from "@/comp
 import { Customer, CustomerFormData } from '@/types'
 import { toast } from "sonner"
 import { getCustomers, addCustomer, updateCustomer, deleteCustomer } from '@/lib/customers'
+import { formatDate } from '@/lib/utils'
 
 export default function CustomersPage() {
     const [searchQuery, setSearchQuery] = useState('')
@@ -89,9 +90,7 @@ export default function CustomersPage() {
     )
 
     // Format date for display
-    const formatDate = (date: Date) => {
-        return new Date(date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
-    }
+
 
     return (
         <div className="min-h-screen bg-gray-50">
