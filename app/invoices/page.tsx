@@ -16,9 +16,10 @@ import { getInvoices } from '@/lib/invoices'
 
 import { Button } from '@/components/ui/button'
 import { formatDate } from '@/lib/utils'
-import { Invoice } from '@prisma/client'
+import { Invoice } from '@/types'
 import Link from 'next/link'
-
+import ReactPDF from '@react-pdf/renderer';
+import InvoicePDF from '@/components/invoices/invoice-document'
 export default function InvoicesPage() {
     const [searchQuery, setSearchQuery] = useState('')
     const [invoices, setInvoices] = useState<Invoice[]>([])
@@ -45,6 +46,31 @@ export default function InvoicesPage() {
         invoice.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    const generatePDF = async (invoice: Invoice) => {
+        const doc = <InvoicePDF invoice={invoice} />;
+        const asPdf = await ReactPDF.pdf(doc).toBlob();
+
+        const sanitize = (s = "") => s.replace(/[^a-z0-9_.-]/gi, "_");
+        const baseName = invoice.invoiceNumber || "invoice";
+        const customerPart = invoice.customer?.name ? `-${sanitize(invoice.customer.name)}` : "";
+        const filename = `${sanitize(baseName)}${customerPart}.pdf`;
+
+        const blobUrl = URL.createObjectURL(asPdf);
+
+        // Open PDF in a new tab
+        window.open(blobUrl, "_blank", "noopener,noreferrer");
+
+        // Also trigger a download
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        // Revoke after a delay to give the new tab time to load the blob
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+    }
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -81,6 +107,7 @@ export default function InvoicesPage() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Invoice Number</TableHead>
+                                <TableHead>Customer Name</TableHead>
                                 <TableHead>Customer Contact</TableHead>
                                 <TableHead>Customer Address</TableHead>
                                 <TableHead>Created At</TableHead>
@@ -93,13 +120,25 @@ export default function InvoicesPage() {
                                 filteredInvoices.map((invoice) => (
                                     <TableRow key={invoice.id}>
                                         <TableCell>{invoice.invoiceNumber}</TableCell>
-                                        <TableCell>{invoice.customerId}</TableCell>
-                                        <TableCell>{/* Customer Address Placeholder */}-</TableCell>
+                                        <TableCell>{invoice.customer?.name}</TableCell>
+                                        <TableCell>
+                                            {invoice.customer?.phone && <div>{invoice.customer.phone}</div>}
+                                            {invoice.customer?.email && <div className="text-gray-600">{invoice.customer.email}</div>}
+                                        </TableCell>
+                                        <TableCell>{invoice.customer?.address}</TableCell>
                                         <TableCell>{formatDate(invoice.createdAt)}</TableCell>
                                         <TableCell>{formatDate(invoice.updatedAt)}</TableCell>
                                         <TableCell>
-                                            <Button variant="link" className="text-blue-600 hover:underline">
+                                            <Button variant="link" className="text-blue-600 hover:underline cursor-pointer">
                                                 View
+                                            </Button>
+                                            <Button variant="link" className="text-blue-600 hover:underline cursor-pointer">
+                                                Edit
+                                            </Button>
+                                            <Button variant="link" className="text-blue-600 hover:underline cursor-pointer"
+                                                onClick={() => generatePDF(invoice)}
+                                            >
+                                                Print
                                             </Button>
                                         </TableCell>
                                     </TableRow>

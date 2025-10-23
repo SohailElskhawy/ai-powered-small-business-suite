@@ -25,6 +25,7 @@ export interface Invoice {
     id: string
     userId: string
     customerId: string
+    customer?: Customer
     invoiceNumber: string
     status: 'DRAFT' | 'SENT' | 'PAID' | 'OVERDUE'
     dueDate: Date

@@ -1,4 +1,4 @@
-import { Invoice } from "@prisma/client";
+import { Invoice } from "@/types";
 import { InvoiceFormData } from '@/types';
 
 const API_BASE = '/api/invoices';
