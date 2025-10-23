@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from 'react'
-import { Search } from 'lucide-react'
+import { Edit, PrinterIcon, Search } from 'lucide-react'
 import { Input } from "@/components/ui/input"
 import {
     Table,
@@ -20,6 +20,7 @@ import { Invoice } from '@/types'
 import Link from 'next/link'
 import ReactPDF from '@react-pdf/renderer';
 import InvoicePDF from '@/components/invoices/invoice-document'
+import ItemsModal from '@/components/invoices/items-modal'
 export default function InvoicesPage() {
     const [searchQuery, setSearchQuery] = useState('')
     const [invoices, setInvoices] = useState<Invoice[]>([])
@@ -110,6 +111,9 @@ export default function InvoicesPage() {
                                 <TableHead>Customer Name</TableHead>
                                 <TableHead>Customer Contact</TableHead>
                                 <TableHead>Customer Address</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Due Date</TableHead>
+                                <TableHead>Total Amount</TableHead>
                                 <TableHead>Created At</TableHead>
                                 <TableHead>Updated At</TableHead>
                                 <TableHead>Actions</TableHead>
@@ -126,18 +130,19 @@ export default function InvoicesPage() {
                                             {invoice.customer?.email && <div className="text-gray-600">{invoice.customer.email}</div>}
                                         </TableCell>
                                         <TableCell>{invoice.customer?.address}</TableCell>
+                                        <TableCell>{invoice.status}</TableCell>
+                                        <TableCell>{formatDate(invoice.dueDate)}</TableCell>
+                                        <TableCell>${invoice.totalAmount}</TableCell>
                                         <TableCell>{formatDate(invoice.createdAt)}</TableCell>
                                         <TableCell>{formatDate(invoice.updatedAt)}</TableCell>
                                         <TableCell>
-                                            <Button variant="link" className="text-blue-600 hover:underline cursor-pointer">
-                                                View
-                                            </Button>
-                                            <Button variant="link" className="text-blue-600 hover:underline cursor-pointer">
+                                            <ItemsModal invoice={invoice} />
+                                            <Button variant="outline" size="sm" className='mx-0.5'>
+                                                <Edit className="w-4 h-4 mr-2" />
                                                 Edit
                                             </Button>
-                                            <Button variant="link" className="text-blue-600 hover:underline cursor-pointer"
-                                                onClick={() => generatePDF(invoice)}
-                                            >
+                                            <Button variant="outline" className='mx-0.5' size="sm" onClick={() => generatePDF(invoice)}>
+                                                <PrinterIcon className="w-4 h-4 mr-2" />
                                                 Print
                                             </Button>
                                         </TableCell>

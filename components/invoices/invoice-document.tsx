@@ -122,7 +122,10 @@ const InvoicePDF = ({ invoice }: { invoice: Invoice }) => {
 
                 {/* Invoice Info */}
                 <View style={styles.invoiceMeta}>
-                    <Text>Invoice No: {invoice.invoiceNumber}</Text>
+                    <View>
+                        <Text>Invoice No: {invoice.invoiceNumber}</Text>
+                        <Text style={{marginTop:2}}>Due Date: {new Date(invoice.dueDate).toLocaleDateString()}</Text>
+                    </View>
                     <Text>Date: {new Date(invoice.createdAt).toLocaleDateString()}</Text>
                 </View>
 
