@@ -33,3 +33,18 @@ export const createInvoice = async (data: InvoiceFormData): Promise<Invoice> => 
     
     return response.json();
 }
+
+export const updateInvoice = async (id: string, data: InvoiceFormData): Promise<Invoice> => {
+    const response = await fetch(`${API_BASE}/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update invoice');
+    }
+    return response.json();
+}

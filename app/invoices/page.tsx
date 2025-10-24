@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from 'react'
-import { Edit, PrinterIcon, Search } from 'lucide-react'
+import {  PrinterIcon, Search } from 'lucide-react'
 import { Input } from "@/components/ui/input"
 import {
     Table,
@@ -21,6 +21,7 @@ import Link from 'next/link'
 import ReactPDF from '@react-pdf/renderer';
 import InvoicePDF from '@/components/invoices/invoice-document'
 import ItemsModal from '@/components/invoices/items-modal'
+import EditInvoiceModal from '@/components/invoices/form-modal'
 export default function InvoicesPage() {
     const [searchQuery, setSearchQuery] = useState('')
     const [invoices, setInvoices] = useState<Invoice[]>([])
@@ -137,10 +138,7 @@ export default function InvoicesPage() {
                                         <TableCell>{formatDate(invoice.updatedAt)}</TableCell>
                                         <TableCell>
                                             <ItemsModal invoice={invoice} />
-                                            <Button variant="outline" size="sm" className='mx-0.5'>
-                                                <Edit className="w-4 h-4 mr-2" />
-                                                Edit
-                                            </Button>
+                                            <EditInvoiceModal invoice={invoice} />
                                             <Button variant="outline" className='mx-0.5' size="sm" onClick={() => generatePDF(invoice)}>
                                                 <PrinterIcon className="w-4 h-4 mr-2" />
                                                 Print
