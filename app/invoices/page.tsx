@@ -137,7 +137,7 @@ export default function InvoicesPage() {
                                         <TableCell>{formatDate(invoice.createdAt)}</TableCell>
                                         <TableCell>{formatDate(invoice.updatedAt)}</TableCell>
                                         <TableCell>
-                                            <ItemsModal invoice={invoice} />
+                                            <ItemsModal invoice={invoice} onInvoiceUpdate={loadInvoices} />
                                             <EditInvoiceModal invoice={invoice} />
                                             <Button variant="outline" className='mx-0.5' size="sm" onClick={() => generatePDF(invoice)}>
                                                 <PrinterIcon className="w-4 h-4 mr-2" />

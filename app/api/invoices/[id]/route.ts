@@ -5,7 +5,7 @@ import { authOptions } from '@/lib/auth'
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await getServerSession(authOptions)
@@ -23,9 +23,11 @@ export async function GET(
         }
 
         // Get invoice with items and customer
+        const { id } = await params;
+
         const invoice = await prisma.invoice.findFirst({
             where: {
-                id: params.id,
+                id: id,
                 userId: user.id
             },
             include: {
@@ -50,7 +52,7 @@ export async function GET(
 
 export async function PUT(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await getServerSession(authOptions)
@@ -68,11 +70,11 @@ export async function PUT(
         }
 
         const body = await request.json()
-
+        const { id } = await params;
         // Check if invoice exists and belongs to user
         const existingInvoice = await prisma.invoice.findFirst({
             where: {
-                id: params.id,
+                id: id,
                 userId: user.id
             }
         })
@@ -83,7 +85,7 @@ export async function PUT(
 
         // Update invoice
         const invoice = await prisma.invoice.update({
-            where: { id: params.id },
+            where: { id: id },
             data: body,
             include: {
                 items: true,
@@ -103,7 +105,7 @@ export async function PUT(
 
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await getServerSession(authOptions)
@@ -119,11 +121,11 @@ export async function DELETE(
         if (!user) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 })
         }
-
+        const { id } = await params;
         // Check if invoice exists and belongs to user
         const existingInvoice = await prisma.invoice.findFirst({
             where: {
-                id: params.id,
+                id: id,
                 userId: user.id
             }
         })
@@ -134,7 +136,7 @@ export async function DELETE(
 
         // Delete invoice (items will be deleted automatically due to cascade)
         await prisma.invoice.delete({
-            where: { id: params.id }
+            where: { id: id }
         })
 
         return NextResponse.json({ message: 'Invoice deleted successfully' })

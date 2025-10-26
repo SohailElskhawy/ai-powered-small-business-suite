@@ -72,6 +72,7 @@ export interface InvoiceFormData {
     customerId: string
     items: InvoiceItemFormData[]
     dueDate: string // ISO date string
+    status?: 'DRAFT' | 'SENT' | 'PAID' | 'OVERDUE'
 }
 
 export interface InvoiceItemFormData {

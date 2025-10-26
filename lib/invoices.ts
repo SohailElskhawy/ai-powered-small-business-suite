@@ -34,7 +34,7 @@ export const createInvoice = async (data: InvoiceFormData): Promise<Invoice> => 
     return response.json();
 }
 
-export const updateInvoice = async (id: string, data: InvoiceFormData): Promise<Invoice> => {
+export const updateInvoice = async (id: string, data: InvoiceFormData | Partial<Invoice>): Promise<Invoice> => {
     const response = await fetch(`${API_BASE}/${id}`, {
         method: 'PUT',
         headers: {
