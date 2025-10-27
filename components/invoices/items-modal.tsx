@@ -115,8 +115,8 @@ const ItemsModal = ({ invoice, onInvoiceUpdate }: { invoice: Invoice; onInvoiceU
                                     <TableRow key={index}>
                                         <TableCell>{item.description}</TableCell>
                                         <TableCell>{item.quantity}</TableCell>
-                                        <TableCell>${item.unitPrice}</TableCell>
-                                        <TableCell>${item.quantity * item.unitPrice}</TableCell>
+                                        <TableCell>${Number(item.unitPrice).toFixed(2)}</TableCell>
+                                        <TableCell>${(item.quantity * item.unitPrice).toFixed(2)}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
