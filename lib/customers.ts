@@ -89,3 +89,19 @@ export async function getCustomer(customerId: string): Promise<Customer> {
 
     return response.json()
 }
+
+// Get the total number of customers
+export async function getCustomerCount(): Promise<number> {
+    const response = await fetch(`${API_BASE}/length`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to fetch customer count')
+    }
+    const count = await response.json()
+    return count
+}

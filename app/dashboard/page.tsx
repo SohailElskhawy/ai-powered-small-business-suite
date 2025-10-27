@@ -8,9 +8,13 @@ import { AddCustomerModal } from "@/components/customers/form-modal"
 import { addCustomer } from "@/lib/customers"
 import { toast } from "sonner"
 import { CustomerFormData } from "@/types"
+import useDashboardData from "@/hooks/useDashboardData"
+import { ChartLine } from "@/components/dashboard/line-chart"
+
 
 export default function Dashboard() {
     const { data: session } = useSession()
+    const {customerCount, invoicesData, productsCount, revenueMonth, monthlyRevenueData} = useDashboardData()
 
     const handleAddCustomer = async (data: CustomerFormData) => {
         try {
@@ -46,8 +50,14 @@ export default function Dashboard() {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-gray-900">0</div>
-                                <p className="text-xs text-gray-600">No customers yet</p>
+                                <div className="text-2xl font-bold text-gray-900">{customerCount || 0}</div>
+                                {
+                                    customerCount ? (
+                                        <p className="text-xs text-gray-600">Actively engaging with your business.</p>
+                                    ) : (
+                                        <p className="text-xs text-gray-600">No customers yet</p>
+                                    )
+                                }
                             </CardContent>
                         </Card>
 
@@ -58,8 +68,14 @@ export default function Dashboard() {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-gray-900">0</div>
-                                <p className="text-xs text-gray-600">No invoices yet</p>
+                                <div className="text-2xl font-bold text-gray-900">{invoicesData.length}</div>
+                                {
+                                    invoicesData.length ? (
+                                        <p className="text-xs text-gray-600">Invoices awaiting payment.</p>
+                                    ) : (
+                                        <p className="text-xs text-gray-600">No active invoices</p>
+                                    )
+                                }
                             </CardContent>
                         </Card>
 
@@ -70,8 +86,14 @@ export default function Dashboard() {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-gray-900">0</div>
-                                <p className="text-xs text-gray-600">No products yet</p>
+                                <div className="text-2xl font-bold text-gray-900">{productsCount || 0}</div>
+                                {
+                                    productsCount ? (
+                                        <p className="text-xs text-gray-600">Products available for sale.</p>
+                                    ) : (
+                                        <p className="text-xs text-gray-600">No products yet</p>
+                                    )
+                                }
                             </CardContent>
                         </Card>
 
@@ -82,8 +104,14 @@ export default function Dashboard() {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-gray-900">$0</div>
-                                <p className="text-xs text-gray-600">No revenue yet</p>
+                                <div className="text-2xl font-bold text-gray-900">${Number(revenueMonth).toFixed(2)}</div>
+                                {
+                                    revenueMonth ? (
+                                        <p className="text-xs text-gray-600">Revenue generated this month.</p>
+                                    ) : (
+                                        <p className="text-xs text-gray-600">No revenue yet</p>
+                                    )
+                                }
                             </CardContent>
                         </Card>
                     </div>
@@ -109,19 +137,8 @@ export default function Dashboard() {
                             </CardContent>
                         </Card>
 
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Recent Activity</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-center text-gray-500 py-8">
-                                    <p>No recent activity to show.</p>
-                                    <p className="text-sm mt-2">
-                                        Start by adding customers and creating invoices.
-                                    </p>
-                                </div>
-                            </CardContent>
-                        </Card>
+                        {/* chart */}
+                        <ChartLine data={monthlyRevenueData} />
                     </div>
                 </div>
             </main>

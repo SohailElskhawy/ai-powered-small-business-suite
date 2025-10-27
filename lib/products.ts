@@ -61,3 +61,14 @@ export const deleteProduct = async (productId: string): Promise<void> => {
     }
     return;
 }
+
+export const getProductsCount = async (): Promise<number> => {
+    const response = await fetch(`${API_BASE}/length`, {
+        method: 'GET',
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to fetch products count');
+    }
+    return response.json();
+}
