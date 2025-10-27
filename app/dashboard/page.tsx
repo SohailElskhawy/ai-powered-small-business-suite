@@ -10,6 +10,7 @@ import { toast } from "sonner"
 import { CustomerFormData } from "@/types"
 import useDashboardData from "@/hooks/useDashboardData"
 import { ChartLine } from "@/components/dashboard/line-chart"
+import { seedData } from "@/lib/dummyData"
 
 
 export default function Dashboard() {
@@ -68,7 +69,7 @@ export default function Dashboard() {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-gray-900">{invoicesData.length}</div>
+                                <div className="text-2xl font-bold text-gray-900">{invoicesData.filter(invoice => invoice.status !== 'PAID').length}</div>
                                 {
                                     invoicesData.length ? (
                                         <p className="text-xs text-gray-600">Invoices awaiting payment.</p>
@@ -123,6 +124,11 @@ export default function Dashboard() {
                                 <CardTitle>Quick Actions</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
+                                <Button className="w-full justify-start" variant="outline"
+                                    onClick={() => seedData()}
+                                >
+                                    Seed Database
+                                </Button>
                                 <AddCustomerModal mode="add_quick_action" onSubmit={handleAddCustomer} />
                                 <Button asChild className="w-full justify-start" variant="outline">
                                     <Link href="/products/new">

@@ -26,7 +26,9 @@ const useDashboardData = () => {
     const fetchInvoices = async () => {
         try {
             const data = await getInvoices()
-            setRevenueMonth(data.filter(invoice => invoice.status === 'PAID').reduce((sum, invoice) => sum + invoice.totalAmount, 0))
+            const total = data.filter(invoice => invoice.status === 'PAID').reduce((sum, invoice) => sum + Number(invoice.totalAmount), 0)
+            console.log("Monthly Revenue:", total, typeof total)
+            setRevenueMonth(total)
             setInvoicesData(data)
         } catch (error) {
             console.error("Error fetching invoices:", error)
@@ -56,7 +58,7 @@ useEffect(() => {
         invoicesData.forEach(invoice => {
             const month = new Date(invoice.createdAt).getMonth()
             if (invoice.status === 'PAID') {
-                monthlyData[month] += invoice.totalAmount
+                monthlyData[month] += Number(invoice.totalAmount)
             }
         })
         

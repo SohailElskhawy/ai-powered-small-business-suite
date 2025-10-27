@@ -1,6 +1,6 @@
 "use client"
 
-import { CartesianGrid, Line, LineChart, XAxis } from "recharts"
+import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
 
 import {
   Card,
@@ -28,42 +28,25 @@ export function ChartLine({ data }: { data: { month: string; revenue: number }[]
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Line Chart</CardTitle>
+        <CardTitle>Revenue Chart</CardTitle>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
-          <LineChart
-            accessibilityLayer
-            data={data}
-            margin={{
-              left: 12,
-              right: 12,
-              top: 5, 
-              bottom: 20,
-            }}
-          >
-            <CartesianGrid vertical={false} 
-            />
+          <BarChart accessibilityLayer data={data}>
+            <CartesianGrid vertical={false} />
             <XAxis
               dataKey="month"
               tickLine={false}
+              tickMargin={10}
               axisLine={false}
-              tickMargin={8}
               tickFormatter={(value) => value.slice(0, 3)}
-              padding={{ left: 20, right: 20 }}
             />
             <ChartTooltip
               cursor={false}
               content={<ChartTooltipContent hideLabel />}
             />
-            <Line
-              dataKey="revenue"
-              type="natural"
-              stroke="var(--color-revenue)"
-              strokeWidth={2}
-              dot={false}
-            />
-          </LineChart>
+            <Bar dataKey="revenue" fill="var(--color-revenue)" radius={8} />
+          </BarChart>
         </ChartContainer>
       </CardContent>
     </Card>
